@@ -1,40 +1,52 @@
 package com.github.deberth.todo.api;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.validator.constraints.NotBlank;
 
-import javax.validation.constraints.NotNull;
-
+import javax.persistence.*;
+import java.util.concurrent.atomic.AtomicInteger;
+@Entity
+@Table(name = "tasks")
+@NamedQueries({
+        @NamedQuery(name = "com.github.deberth.todo.api.Task.findAll",
+                query = "select t from Task t")
+})
 public class Task {
 
-    @NotNull
+    @Id
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private Integer id;
 
     @NotBlank
     private String name;
 
+    @JsonInclude(JsonInclude.Include.NON_NULL)
     private String description;
 
-    public long getId() {
-        return id;
-    }
+    @ManyToOne
+    @JoinColumn(name = "todo_id", insertable = false, updatable = false)
+    private Todo todo;
 
-    public String getName() {
-        return name;
+    public void setId(Integer id) {this.id = id;}
+    public Integer getId() {
+        return id;
     }
 
     public void setName(String name) {
         this.name = name;
     }
-
-    public String getDescription() {
-        return description;
+    public String getName() {
+        return name;
     }
 
     public void setDescription(String description) {
         this.description = description;
+    }
+    public String getDescription() {
+        return description;
     }
 
     // Constructors
@@ -42,10 +54,11 @@ public class Task {
 
     public Task() {}
 
-    public Task(Integer id, String name) {
+    public Task(Integer id, String name, String description) {
         super();
         this.id = id;
         this.name = name;
+        this.description = description;
     }
 
     // Methods
@@ -60,5 +73,14 @@ public class Task {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public int hashCode() {
+        return new HashCodeBuilder(17, 37).
+                append(id).
+                append(name).
+                append(description).
+                toHashCode();
     }
 }

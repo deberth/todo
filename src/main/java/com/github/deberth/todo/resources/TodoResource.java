@@ -1,19 +1,18 @@
 package com.github.deberth.todo.resources;
 
 import com.github.deberth.todo.api.Todo;
+import com.github.deberth.todo.core.TodoService;
+import com.github.deberth.todo.db.TaskDAO;
 import com.github.deberth.todo.db.TodoDAO;
-import com.github.deberth.todo.db.TodoDAO_Local;
+import io.dropwizard.hibernate.UnitOfWork;
 
-import javax.validation.ConstraintViolation;
 import javax.validation.Valid;
-import javax.validation.Validator;
+import javax.validation.constraints.NotNull;
 import javax.ws.rs.*;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Path("/todos")
@@ -21,25 +20,23 @@ import java.util.stream.Collectors;
 @Produces(MediaType.APPLICATION_JSON)
 public class TodoResource {
 
-    private final Validator validator;
+    private final TodoService todoService;
 
-    // private final TaskDAO taskDAO;
-    private final TodoDAO todoDAO;
-
-    public TodoResource(TodoDAO todoDAO, Validator validator) {
-        this.todoDAO = todoDAO;
-        this.validator = validator;
+    public TodoResource(TodoService todoService) {
+        this.todoService = todoService;
     }
 
     @GET
+    @UnitOfWork
     public Response findAllTodos() {
-        return Response.ok(this.todoDAO.findAll()).build();
+        return Response.ok(this.todoService.findAllTodos()).build();
     }
 
     @GET
+    @UnitOfWork
     @Path("/{id}")
     public Response findTodoById(@PathParam("id") int id) {
-        Todo todo = this.todoDAO.find(id);
+        Todo todo = this.todoService.findTodoById(id);
         if (todo == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
@@ -47,52 +44,44 @@ public class TodoResource {
     }
 
     @POST
-    public Response createTodo(@Valid Todo newTodo) throws URISyntaxException {
-        // Validate input
-        Set<ConstraintViolation<Todo>> constraintViolations = validator.validate(newTodo);
-        if (!constraintViolations.isEmpty()) {
-            List<String> validationMessages = constraintViolations.stream().map(v ->  v.getPropertyPath() + ":" + v.getMessage()).collect(Collectors.toList());
-            return Response.status(Response.Status.BAD_REQUEST).entity(validationMessages).build();
-        }
-
+    @UnitOfWork
+    public Response createTodo(@Valid Todo todo) throws URISyntaxException {
         // TODO: Check if entity already exists?
 
-        Todo createdTodo = this.todoDAO.create(newTodo);
+        Todo createdTodo = this.todoService.createNewTodo(todo);
         // TODO: return URI or created todo?
         return Response.created(new URI("/todos/" + createdTodo.getId())).build();
     }
 
     @DELETE
+    @UnitOfWork
     @Path("/{id}")
     public Response removeTodo(@PathParam("id") int id) {
         // Check for existing todo
-        Todo todo = this.todoDAO.find(id);
+        Todo todo = this.todoService.findTodoById(id);
         if (todo == null) {
             return Response.status(Response.Status.NOT_FOUND).build();
         }
 
-        this.todoDAO.remove(id);
+        this.todoService.removeTodo(id);
         return Response.noContent().build();
     }
 
     @PUT
-    @PathParam("{id}")
-    public Response updateTodo(@PathParam("id") int id, Todo updatedTodo) throws URISyntaxException {
-        // Validate input
-        Set<ConstraintViolation<Todo>> constraintViolations = validator.validate(updatedTodo);
-        if (!constraintViolations.isEmpty()) {
-            List<String> validationMessages = constraintViolations.stream().map(v ->  v.getPropertyPath() + ":" + v.getMessage()).collect(Collectors.toList());
-            return Response.status(Response.Status.BAD_REQUEST).entity(validationMessages).build();
-        }
-
+    @UnitOfWork
+    @Path("/{id}")
+    public Response updateTodo(@PathParam("id") int id, @Valid @NotNull Todo updatedTodo) throws URISyntaxException {
+        System.out.println("############### " + id);
         // Check for existing todo
-        Todo todo = this.todoDAO.find(id);
+        Todo todo = this.todoService.findTodoById(id);
+        System.out.println("New" + updatedTodo.toString());
+
         if (todo == null) {
-            Todo createdTodo = this.todoDAO.create(updatedTodo);
+            Todo createdTodo = this.todoService.createNewTodo(updatedTodo);
             return Response.created(new URI("/todos/" + createdTodo.getId())).build();
         }
-
-        this.todoDAO.update(id, updatedTodo);
+        System.out.println("Found" + todo.toString());
+        this.todoService.updateTodo(updatedTodo);
         return Response.noContent().build();
 
     }

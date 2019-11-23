@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class TodoDAO_LocalTest {
+class TodoDAO_Impl_LocalTest {
 
     @Test
     void findAll() {

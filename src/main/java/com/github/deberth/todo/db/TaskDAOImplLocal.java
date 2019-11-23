@@ -7,8 +7,15 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 
-public class TaskDAO_Local implements DAO{
+public class TaskDAOImplLocal implements TaskDAO{
+
+    private static final AtomicInteger counter = new AtomicInteger();
+
+    public static int incrementId() {
+        return counter.getAndIncrement();
+    }
 
     private HashMap<Integer, Task> TaskDB = new HashMap<>();
 
@@ -21,7 +28,11 @@ public class TaskDAO_Local implements DAO{
     }
 
     public Task create(Task task) {
-        return this.TaskDB.put(task.hashCode(), task);
+        // TODO: hashCode ersetzen durch unique ID, welche noch nicht vorhanden ist
+        task.setId(incrementId());
+        this.TaskDB.put(task.getId(), task);
+
+        return task;
     }
 
     public void update(int id, Task task) {
