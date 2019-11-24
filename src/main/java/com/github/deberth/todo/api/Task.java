@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class Task {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @NotBlank
@@ -26,7 +26,7 @@ public class Task {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     private String description;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "todo_id", insertable = false, updatable = false)
     private Todo todo;
 

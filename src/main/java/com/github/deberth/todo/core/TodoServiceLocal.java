@@ -7,6 +7,7 @@ import com.github.deberth.todo.db.TodoDAOImplLocal;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.Response;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -17,33 +18,38 @@ public class TodoServiceLocal extends TodoService{
     }
 
     @Override
-    public List<Todo> findAllTodos() {
-        return this.todoDAO.findAll();
+    public TodoServiceResponse findAllTodos() {
+        return new TodoServiceResponse(OK, this.todoDAO.findAll());
     }
 
     @Override
-    public Todo findTodoById(Integer id) {
-        return this.todoDAO.find(id);
+    public TodoServiceResponse findTodoById(Integer id) {
+        Todo found = this.todoDAO.find(id);
+        if (found == null) {
+            new TodoServiceResponse(NOT_FOUND, null);
+        }
+        return new TodoServiceResponse(OK, found);
     }
 
     @Override
-    public Todo createNewTodo(@NotNull @Valid Todo todo) {
-        todo.setTasks(todo.getTasks().stream().map(t -> this.taskDAO.create(t)).collect(Collectors.toList()));
-        return this.todoDAO.create(todo);
+    public TodoServiceResponse createNewTodo(@NotNull @Valid Todo todo) {
+        todo.setTasks(todo.getTasks().stream().map(t -> this.taskDAO.create(t)).collect(Collectors.toSet()));
+        return new TodoServiceResponse(CREATED, this.todoDAO.create(todo));
     }
 
     @Override
-    public void removeTodo(Integer id) {
+    public TodoServiceResponse removeTodo(Integer id) {
         Todo todo = this.todoDAO.find(id);
         todo.getTasks().forEach(t -> this.taskDAO.remove(t.getId()));
         this.todoDAO.remove(id);
+        return new TodoServiceResponse(NO_CONTENT, null);
     }
 
     @Override
-    public void updateTodo(@NotNull @Valid Todo todo) {
-        Todo found = this.todoDAO.find(todo.getId());
+    public TodoServiceResponse updateTodo(Integer id, @NotNull @Valid Todo todo) {
         todo.getTasks().forEach(t -> this.taskDAO.remove(t.getId()));
         this.todoDAO.update(todo.getId(), todo);
+        return new TodoServiceResponse(NO_CONTENT, null);
     }
 
 

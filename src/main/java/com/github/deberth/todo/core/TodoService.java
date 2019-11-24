@@ -6,9 +6,18 @@ import com.github.deberth.todo.db.TodoDAO;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.ws.rs.core.Response;
 import java.util.List;
 
 public abstract class TodoService {
+
+    public static final int CREATED = 201;
+    public static final int OK = 200;
+    public static final int NO_CONTENT = 204;
+    public static final int BAD_REQUEST = 400;
+    public static final int NOT_FOUND = 404;
+    public static final int SERVER_ERROR = 500;
+    public static final int CONFLICT = 409;
 
     protected TodoDAO todoDAO;
     protected TaskDAO taskDAO;
@@ -18,15 +27,15 @@ public abstract class TodoService {
             this.taskDAO = taskDAO;
     }
 
-    abstract public  List<Todo> findAllTodos();
+    abstract public TodoServiceResponse findAllTodos();
 
-    abstract public Todo findTodoById(Integer id);
+    abstract public TodoServiceResponse findTodoById(Integer id);
 
-    abstract public Todo createNewTodo(@NotNull @Valid Todo todo);
+    abstract public TodoServiceResponse createNewTodo(@NotNull @Valid Todo todo);
 
-    abstract public void removeTodo(Integer id);
+    abstract public TodoServiceResponse removeTodo(Integer id);
 
-    abstract public void updateTodo(@NotNull @Valid Todo todo);
+    abstract public TodoServiceResponse updateTodo(Integer id, @NotNull @Valid Todo todo);
 
 
 }

@@ -16,7 +16,7 @@ database:
   driverClass: org.postgresql.Driver
   user: postgres
   password: secret
-  url: jdbc:postgresql://0.0.0.0:5432/postgres
+  url: jdbc:postgresql://192.168.99.100:5432/postgres
   properties:
     charSet: UTF-8
     hibernate.dialect: org.hibernate.dialect.PostgreSQLDialect

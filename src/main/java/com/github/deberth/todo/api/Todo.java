@@ -8,7 +8,9 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.validator.constraints.NotBlank;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "todos")
@@ -19,7 +21,7 @@ import java.util.List;
 public class Todo {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
     @NotBlank
@@ -29,9 +31,9 @@ public class Todo {
     private String description;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    @OneToMany
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "todo_id")
-    private List<Task> tasks;
+    private Set<Task> tasks = new HashSet<>();
 
     public void setId(Integer id) {this.id = id;}
     public Integer getId() {return this.id;}
@@ -50,16 +52,16 @@ public class Todo {
         return this.description;
     }
 
-    public List<Task> getTasks() {return tasks;}
+    public Set<Task> getTasks() {return tasks;}
 
-    public void setTasks(List<Task> tasks) {this.tasks = tasks;}
+    public void setTasks(Set<Task> tasks) {this.tasks = tasks;}
 
     // Constructors
     //#######################################
 
     public Todo() {}
 
-    public Todo(Integer id, String name, String description, List<Task> tasks) {
+    public Todo(Integer id, String name, String description, Set<Task> tasks) {
         super();
         this.id = id;
         this.name = name;

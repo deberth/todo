@@ -11,3 +11,12 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: secret
       POSTGRES_DATABASE: postgres
+
+  pgadmin:
+    image:   dpage/pgadmin4
+    restart: always
+    ports:
+      - "80:80"
+    environment:
+      - PGADMIN_DEFAULT_EMAIL=test@test.com
+      - PGADMIN_DEFAULT_PASSWORD=test

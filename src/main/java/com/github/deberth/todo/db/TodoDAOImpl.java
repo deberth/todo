@@ -4,6 +4,7 @@ import com.github.deberth.todo.api.Todo;
 import io.dropwizard.hibernate.AbstractDAO;
 import org.hibernate.SessionFactory;
 
+import javax.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -11,12 +12,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class TodoDAOImpl extends AbstractDAO<Todo> implements TodoDAO{
 
-        public TodoDAOImpl(SessionFactory sessionFactory) {
+    public TodoDAOImpl(SessionFactory sessionFactory) {
         super(sessionFactory);
     }
 
     public List<Todo> findAll() {
-        return list(namedQuery("com.github.deberth.todo.api.Task.findAll"));
+        return list(namedQuery("com.github.deberth.todo.api.Todo.findAll"));
     }
 
     public Todo find(int id) {
@@ -28,7 +29,7 @@ public class TodoDAOImpl extends AbstractDAO<Todo> implements TodoDAO{
     }
 
     public void update(int id, Todo todo) {
-        persist(todo);
+            currentSession().merge(todo);
     }
 
     public void remove(int id) {

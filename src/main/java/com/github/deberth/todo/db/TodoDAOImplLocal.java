@@ -10,6 +10,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class TodoDAOImplLocal implements TodoDAO{
 
     private static final AtomicInteger counter = new AtomicInteger();
+
     public static int incrementId() {
         return counter.getAndIncrement();
     }
