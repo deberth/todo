@@ -7,7 +7,6 @@ import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.hibernate.validator.constraints.NotBlank;
 
 import javax.persistence.*;
-import java.util.concurrent.atomic.AtomicInteger;
 @Entity
 @Table(name = "tasks")
 @NamedQueries({
@@ -49,10 +48,23 @@ public class Task {
         return description;
     }
 
+    public Todo getTodo() {
+        return todo;
+    }
+
+    public void setTodo(Todo todo) {
+        this.todo = todo;
+    }
+
     // Constructors
     //#######################################
 
     public Task() {}
+
+    public Task(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
 
     public Task(Integer id, String name, String description) {
         super();
@@ -82,5 +94,24 @@ public class Task {
                 append(name).
                 append(description).
                 toHashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
+
+        if (!(obj instanceof Task)) {
+            return false;
+        }
+        if (this.id == ((Task) obj).id  &&
+            this.name.equalsIgnoreCase(((Task) obj).name)    &&
+            this.description.equalsIgnoreCase(((Task) obj).description)) {
+                        return true;
+        } else {
+            return false;
+        }
+
     }
 }

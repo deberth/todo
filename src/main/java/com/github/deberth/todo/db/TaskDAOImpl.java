@@ -20,18 +20,18 @@ public class TaskDAOImpl extends AbstractDAO<Task> implements TaskDAO {
         return get(id);
     }
 
-    public Task create(Task Task) {
-        return persist(Task);
+    public Task create(Task task) {
+        return persist(task);
     }
 
-    public void update(int id, Task Task) {
-        persist(Task);
+    public void update(int id, Task task) {
+        currentSession().merge(task);
     }
 
     public void remove(int id) {
-            Task Task = get(id);
-            if (Task != null) {
-                currentSession().remove(Task);
+            Task task = get(id);
+            if (task != null) {
+                currentSession().remove(task);
             }
     }
 

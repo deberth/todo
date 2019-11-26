@@ -1,0 +1,17 @@
+{
+  "id": 1,
+  "name": "TestTodoName",
+  "description" : "TestTodoDescription",
+  "tasks": [
+    {
+      "id": null,
+      "name": "TestTaskName-1",
+      "description": "TestTaskDescription"
+    },
+    {
+      "id": 2,
+      "name": "TestTaskName-2",
+      "description": ""
+    }
+  ]
+}

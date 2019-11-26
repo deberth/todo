@@ -61,11 +61,20 @@ public class Todo {
 
     public Todo() {}
 
-    public Todo(Integer id, String name, String description, Set<Task> tasks) {
-        super();
+    public Todo(int id, String name, String description) {
         this.id = id;
         this.name = name;
         this.description = description;
+    }
+
+    public Todo(String name, String description) {
+        this.name = name;
+        this.description = description;
+    }
+
+    public Todo(Integer id, String name, String description, Set<Task> tasks) {
+        this(name, description);
+        this.id = id;
         this.tasks = tasks;
     }
 
@@ -91,5 +100,24 @@ public class Todo {
                 toHashCode();
     }
 
+    @Override
+    public boolean equals(Object obj) {
+        if (obj == null) {
+            return false;
+        }
 
+        if (!(obj instanceof Todo)) {
+            return false;
+        }
+        if (this.id == ((Todo) obj).id &&
+            this.name.equalsIgnoreCase(((Todo) obj).name)    &&
+            this.description.equalsIgnoreCase(((Todo) obj).description) &&
+            this.tasks.equals(((Todo) obj).tasks)) {
+
+            return true;
+        } else {
+            return false;
+        }
+
+    }
 }

@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 
-public class TodoDAOImpl extends AbstractDAO<Todo> implements TodoDAO{
+public class TodoDAOImpl extends AbstractDAO<Todo> implements TodoDAO {
 
     public TodoDAOImpl(SessionFactory sessionFactory) {
         super(sessionFactory);
