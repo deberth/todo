@@ -25,6 +25,7 @@ public class TodoServiceDatabase extends TodoService{
         if (found == null) {
             return new TodoServiceResponse(NOT_FOUND, null);
         }
+
         return new TodoServiceResponse(OK, found);
     }
 
@@ -34,12 +35,13 @@ public class TodoServiceDatabase extends TodoService{
         // Avoid invalid POST with already existing ID
         if (todo.getId() != null) {
             Todo found = this.todoDAO.find(todo.getId());
-            if (found == null) {
+            if (found != null) {
                 return new TodoServiceResponse(CONFLICT);
             }
         }
 
         Todo createdTodo = this.todoDAO.create(todo);
+
         return new TodoServiceResponse(CREATED, createdTodo);
     }
 

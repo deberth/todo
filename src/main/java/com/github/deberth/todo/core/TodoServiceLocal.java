@@ -27,7 +27,7 @@ public class TodoServiceLocal extends TodoService{
     public TodoServiceResponse findTodoById(Integer id) {
         Todo found = this.todoDAO.find(id);
         if (found == null) {
-            new TodoServiceResponse(NOT_FOUND, null);
+            return new TodoServiceResponse(NOT_FOUND, null);
         }
 
         return new TodoServiceResponse(OK, found);
