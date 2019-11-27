@@ -1,7 +1,7 @@
 package com.github.deberth.todo.api;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
@@ -9,7 +9,6 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import javax.persistence.*;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -33,6 +32,7 @@ public class Todo {
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "todo_id")
+    @JsonManagedReference
     private Set<Task> tasks = new HashSet<>();
 
     public void setId(Integer id) {this.id = id;}
@@ -70,6 +70,12 @@ public class Todo {
     public Todo(String name, String description) {
         this.name = name;
         this.description = description;
+    }
+
+    public Todo(String name, String description, Set<Task> tasks) {
+        this.name = name;
+        this.description = description;
+        this.tasks = tasks;
     }
 
     public Todo(Integer id, String name, String description, Set<Task> tasks) {

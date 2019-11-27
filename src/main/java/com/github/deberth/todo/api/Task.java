@@ -1,5 +1,6 @@
 package com.github.deberth.todo.api;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -27,6 +28,7 @@ public class Task {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "todo_id", insertable = false, updatable = false)
+    @JsonBackReference
     private Todo todo;
 
     public void setId(Integer id) {this.id = id;}
