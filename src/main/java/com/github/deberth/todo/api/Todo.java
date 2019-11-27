@@ -109,15 +109,11 @@ public class Todo {
         if (!(obj instanceof Todo)) {
             return false;
         }
-        if (this.id == ((Todo) obj).id &&
-            this.name.equalsIgnoreCase(((Todo) obj).name)    &&
-            this.description.equalsIgnoreCase(((Todo) obj).description) &&
-            this.tasks.equals(((Todo) obj).tasks)) {
-
-            return true;
-        } else {
-            return false;
-        }
+        Todo toCompare = ((Todo) obj);
+        return (this.id == null && toCompare.id == null) || (this.id.intValue() == toCompare.id.intValue()) &&
+                this.name.equalsIgnoreCase(toCompare.name) &&
+                this.description.equalsIgnoreCase(toCompare.description) &&
+                this.tasks.equals(toCompare.tasks);
 
     }
 }

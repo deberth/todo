@@ -19,7 +19,7 @@ import java.util.List;
 @Produces(MediaType.APPLICATION_JSON)
 public class TodoResource {
 
-    protected static final String BASE_PATH_TODO = "/todos/";
+    public static final String BASE_PATH_TODO = "/todos";
     private final TodoService todoService;
 
     public TodoResource(TodoService todoService) {

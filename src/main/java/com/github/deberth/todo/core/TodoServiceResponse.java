@@ -6,7 +6,7 @@ public class TodoServiceResponse {
     private Object entity;
     private int code;
 
-    TodoServiceResponse(int code) {
+    public TodoServiceResponse(int code) {
         this.code = code;
     }
 
