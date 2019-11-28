@@ -25,7 +25,7 @@ class TodoResourceTest {
 
 	private static final TodoService service = mock(TodoServiceDatabase.class);
 
-	public static final ResourceExtension resources = ResourceExtension.builder()
+	private static final ResourceExtension resources = ResourceExtension.builder()
 			.addResource(new TodoResource(service))
 			.build();
 
@@ -41,7 +41,10 @@ class TodoResourceTest {
 		// given
 		Todo todoOne = new Todo(11, "","");
 		Todo todoTwo = new Todo(21, "","");
-		TodoServiceResponse expectedServiceResponse = new TodoServiceResponse(TodoService.OK, List.of(todoOne, todoTwo));
+		List<Todo> todos = new java.util.ArrayList<>();
+		todos.add(todoOne);
+		todos.add(todoTwo);
+		TodoServiceResponse expectedServiceResponse = new TodoServiceResponse(TodoService.OK, todos);
 
 		// and
 		doReturn(expectedServiceResponse).when(service).findAllTodos();

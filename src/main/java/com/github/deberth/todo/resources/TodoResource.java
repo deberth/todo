@@ -31,17 +31,15 @@ public class TodoResource {
     public Response findAllTodos() {
         TodoServiceResponse serviceResponse = this.todoService.findAllTodos();
 
-        switch (serviceResponse.getCode()) {
-            case TodoService.OK:
-                Object foundTodos = serviceResponse.getEntity();
-                if (foundTodos != null && foundTodos instanceof List) {
-                    return Response.ok(foundTodos).build();
-                } else {
-                    return Response.ok().build();
-                }
-            default:
-                return Response.serverError().build();
+        if (serviceResponse.getCode() == TodoService.OK) {
+            Object foundTodos = serviceResponse.getEntity();
+            if (foundTodos != null && foundTodos instanceof List) {
+                return Response.ok(foundTodos).build();
+            } else {
+                return Response.ok().build();
+            }
         }
+        return Response.serverError().build();
     }
 
     @GET
@@ -53,7 +51,7 @@ public class TodoResource {
         switch (serviceResponse.getCode()) {
             case TodoService.OK:
                 Object foundTodo = serviceResponse.getEntity();
-                if (foundTodo != null && foundTodo instanceof Todo) {
+                if (foundTodo instanceof Todo) {
                     return Response.ok(foundTodo).build();
                 } else {
                     return Response.serverError().build();
@@ -76,7 +74,7 @@ public class TodoResource {
                 return Response.status(Response.Status.CONFLICT).build();
             case TodoService.CREATED:
                 Object createdTodo = serviceResponse.getEntity();
-                if (createdTodo != null && createdTodo instanceof Todo) {
+                if (createdTodo instanceof Todo) {
                     return Response.created(new URI(BASE_PATH_TODO + ((Todo) createdTodo).getId())).entity(createdTodo).build();
                 } else {
                     return Response.serverError().build();
@@ -115,7 +113,7 @@ public class TodoResource {
                 return Response.status(Response.Status.BAD_REQUEST.getStatusCode()).build();
             case TodoService.CREATED:
                 Object createdTodo = serviceResponse.getEntity();
-                if (createdTodo != null && createdTodo instanceof Todo) {
+                if (createdTodo instanceof Todo) {
                     return Response.created(new URI(BASE_PATH_TODO + ((Todo) createdTodo).getId())).entity(createdTodo).build();
                 } else {
                     return Response.serverError().build();

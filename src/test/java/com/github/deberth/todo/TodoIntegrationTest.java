@@ -31,20 +31,20 @@ class TodoIntegrationTest {
 
     private static final String CONFIG_PATH = ResourceHelpers.resourceFilePath("config.yml");
     @Container
-    public static final PostgreSQLContainer postgres = new PostgreSQLContainer()
+    private static final PostgreSQLContainer postgres = new PostgreSQLContainer()
             .withDatabaseName("postgres")
             .withUsername("postgres")
             .withPassword("secret");
     static {
         postgres.start();
     }
-    Integer firstID;
-    Integer secondID;
-    Todo created;
+    private Integer firstID;
+    private Integer secondID;
+    private Todo created;
 
-    public static final String HTTP_LOCALHOST = "http://localhost:";
+    private static final String HTTP_LOCALHOST = "http://localhost:";
 
-    public static final DropwizardAppExtension<TodoConfiguration> APP =
+    private static final DropwizardAppExtension<TodoConfiguration> APP =
             new DropwizardAppExtension<TodoConfiguration>(
                     TodoApplication.class,
                     CONFIG_PATH,
@@ -58,7 +58,7 @@ class TodoIntegrationTest {
 //    }
 
     @Test
-    public void happyFlow() {
+    void happyFlow() {
 
         CreateTodos();
         CheckTodosForSize(2);
@@ -98,10 +98,9 @@ class TodoIntegrationTest {
 
         Response resp = executeRequest("/todos", HttpMethod.GET, null);
         assertThat(resp.getStatus()).isEqualTo(HttpStatus.OK_200);
-        List<Todo> foundTodos = null;
+        List foundTodos = null;
         try {
-            foundTodos = resp.readEntity(new GenericType<>() {
-            });
+            foundTodos = resp.readEntity(List.class);
         } catch (Exception e) {
             Assertions.fail();
         }
@@ -110,10 +109,11 @@ class TodoIntegrationTest {
 
     private void CreateTodos() {
 
+        Set<Task> tasks = new java.util.HashSet<>();
+        tasks.add(new Task("t_name1", "t_desc1"));
+        tasks.add(new Task("t_name2", "t_desc2"));
         Response resp = executeRequest("/todos", HttpMethod.POST,
-                Entity.json(new Todo("Test1","Desc1", Set.of(
-                        new Task("t_name1","t_desc1"),
-                        new Task("t_name2","t_desc2")))));
+                Entity.json(new Todo("Test1","Desc1", tasks)));
 
 
         assertThat(resp.getStatus()).isEqualTo(HttpStatus.CREATED_201);
