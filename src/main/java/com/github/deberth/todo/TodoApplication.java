@@ -48,6 +48,7 @@ public class TodoApplication extends Application<TodoConfiguration> {
         LOGGER.info("Starting application");
         String storageType = "local";
 
+        // Database migration
         Flyway flyway = new Flyway();
         DataSourceFactory f = configuration.getSourceFactory();
         flyway.setDataSource(f.getUrl(), f.getUser(), f.getPassword());
