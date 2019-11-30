@@ -1,6 +1,9 @@
 package com.github.deberth.todo.core;
 
-import com.github.deberth.todo.db.*;
+import com.github.deberth.todo.db.TaskDAOImpl;
+import com.github.deberth.todo.db.TaskDAOImplLocal;
+import com.github.deberth.todo.db.TodoDAOImpl;
+import com.github.deberth.todo.db.TodoDAOImplLocal;
 import org.hibernate.SessionFactory;
 
 public class TodoServiceFactory {

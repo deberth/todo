@@ -1,7 +1,5 @@
 package com.github.deberth.todo.core;
 
-import com.github.deberth.todo.api.Todo;
-
 public class TodoServiceResponse {
     private Object entity;
     private int code;

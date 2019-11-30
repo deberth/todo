@@ -6,8 +6,6 @@ import com.github.deberth.todo.db.TodoDAO;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
-import javax.ws.rs.core.Response;
-import java.util.List;
 
 public abstract class TodoService {
 

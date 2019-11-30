@@ -6,6 +6,8 @@ logging:
         type: json
   loggers:
     com.github.deberth.todo: DEBUG
+    "org.hibernate": WARN
+    "io.dropwizard": WARN
 
 server:
   requestLog:
