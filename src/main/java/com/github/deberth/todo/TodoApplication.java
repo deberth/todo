@@ -8,8 +8,6 @@ import com.github.deberth.todo.resources.TodoResource;
 import io.dropwizard.Application;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.db.PooledDataSourceFactory;
-import io.dropwizard.flyway.FlywayBundle;
-import io.dropwizard.flyway.FlywayFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
@@ -20,7 +18,8 @@ import org.slf4j.LoggerFactory;
 
 public class TodoApplication extends Application<TodoConfiguration> {
 
-    public static final Logger LOGGER = LoggerFactory.getLogger(TodoApplication.class);
+    private final Logger Logger = LoggerFactory.getLogger(TodoApplication.class);
+
     private final HibernateBundle<TodoConfiguration> hibernate = new HibernateBundle<TodoConfiguration>(Todo.class, Task.class) {
         @Override
         public PooledDataSourceFactory getDataSourceFactory(TodoConfiguration todoConfiguration) {
@@ -45,20 +44,24 @@ public class TodoApplication extends Application<TodoConfiguration> {
     @Override
     public void run(final TodoConfiguration configuration,
                     final Environment environment) {
-        LOGGER.info("Starting application");
+        Logger.info("Starting application");
         String storageType = "local";
 
+        Logger.info("Flyway migration - Start");
         // Database migration
         Flyway flyway = new Flyway();
         DataSourceFactory f = configuration.getSourceFactory();
         flyway.setDataSource(f.getUrl(), f.getUser(), f.getPassword());
         flyway.migrate();
+        Logger.info("Flyway migration - Done");
 
+        Logger.info("Storage type: {}", storageType);
         environment.healthChecks().register("database", new DatabaseHealthCheck());
         environment.jersey().register(
                 //new TodoResource(TodoServiceFactory.getTodoService(storageType)));
                 new TodoResource(TodoServiceFactory.getTodoService("database", hibernate.getSessionFactory()))
         );
+        Logger.info("Setup Done - Ready for queries");
     }
 
 

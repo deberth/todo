@@ -1,9 +1,18 @@
 logging:
   level: INFO
+  appenders:
+    - type: console
+      layout:
+        type: json
   loggers:
     com.github.deberth.todo: DEBUG
 
 server:
+  requestLog:
+    appenders:
+      - type: console
+        layout:
+          type: access-json
   applicationContextPath: /
   applicationConnectors:
     - type: http
