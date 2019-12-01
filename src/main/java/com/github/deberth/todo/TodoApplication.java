@@ -11,6 +11,7 @@ import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import org.dhatim.dropwizard.correlationid.CorrelationIdBundle;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,6 +40,7 @@ public class TodoApplication extends Application<TodoConfiguration> {
     @Override
     public void initialize(final Bootstrap<TodoConfiguration> bootstrap) {
         bootstrap.addBundle(hibernate);
+        bootstrap.addBundle(CorrelationIdBundle.getDefault());
     }
 
     @Override

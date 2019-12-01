@@ -98,7 +98,11 @@
             <artifactId>jakarta.xml.bind-api</artifactId>
             <version>2.3.2</version>
         </dependency>
-
+        <dependency>
+            <groupId>org.dhatim</groupId>
+            <artifactId>dropwizard-correlation-id</artifactId>
+            <version>0.1.0</version>
+        </dependency>
         <!-- Runtime, com.sun.xml.bind module -->
         <dependency>
             <groupId>org.glassfish.jaxb</groupId>
@@ -209,7 +213,7 @@
                 <artifactId>flyway-maven-plugin</artifactId>
                 <version>6.1.0</version>
                 <configuration>
-                    <url>jdbc:postgresql://0.0.0.0:5432/postgres</url>
+                    <url>jdbc:postgresql://192.168.99.100:5432/postgres</url>
                     <user>postgres</user>
                     <password>secret</password>
                 </configuration>
