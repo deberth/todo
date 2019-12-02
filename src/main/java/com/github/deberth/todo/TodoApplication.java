@@ -5,12 +5,13 @@ import com.github.deberth.todo.api.Todo;
 import com.github.deberth.todo.core.TodoServiceFactory;
 import com.github.deberth.todo.core.auth.TodoAuthenticator;
 import com.github.deberth.todo.core.auth.User;
-import com.github.deberth.todo.health.DatabaseHealthCheck;
+import com.github.deberth.todo.health.AppCheck;
 import com.github.deberth.todo.resources.TodoResource;
 import io.dropwizard.Application;
 import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
+import io.dropwizard.client.JerseyClientBuilder;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
@@ -22,6 +23,8 @@ import org.dhatim.dropwizard.correlationid.CorrelationIdBundle;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import javax.ws.rs.client.Client;
 
 
 public class TodoApplication extends Application<TodoConfiguration> {
@@ -73,16 +76,19 @@ public class TodoApplication extends Application<TodoConfiguration> {
         Logger.info("Flyway migration - Done");
 
         Logger.info("Storage type: {}", storageType);
-        environment.healthChecks().register("database", new DatabaseHealthCheck());
+        //Application health check
+        final Client client = new JerseyClientBuilder(environment).build("healthClient");
+        environment.healthChecks().register("appHealth", new AppCheck(client));
         environment.jersey().register(
                 //new TodoResource(TodoServiceFactory.getTodoService(storageType)));
                 new TodoResource(TodoServiceFactory.getTodoService("database", hibernate.getSessionFactory()))
         );
 
+        // Auth feature
         environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
-                .setAuthenticator(new TodoAuthenticator())
-                .setRealm("BASIC-AUTH-REALM")
-                .buildAuthFilter()));
+        .setAuthenticator(new TodoAuthenticator())
+        .setRealm("BASIC-AUTH-REALM")
+        .buildAuthFilter()));
         environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
 
         Logger.info("Setup Done - Ready for queries");
