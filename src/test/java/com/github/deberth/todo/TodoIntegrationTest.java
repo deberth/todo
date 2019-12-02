@@ -59,7 +59,13 @@ class TodoIntegrationTest {
 
     @Test
     void happyFlow() {
-
+        System.out.println("##############################################");
+        System.out.println("##############################################");
+        System.out.println("##############################################");
+        System.out.println(CONFIG_PATH);
+        System.out.println("##############################################");
+        System.out.println("##############################################");
+        System.out.println("##############################################");
         CreateTodos();
         CheckTodosForSize(2);
         UpdateTodo();
