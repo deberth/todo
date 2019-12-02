@@ -1,12 +1,12 @@
 package com.github.deberth.todo;
 
-import io.dropwizard.Configuration;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import io.dropwizard.Configuration;
 import io.dropwizard.db.DataSourceFactory;
-import org.hibernate.validator.constraints.*;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 
 import javax.validation.Valid;
-import javax.validation.constraints.*;
+import javax.validation.constraints.NotNull;
 
 public class TodoConfiguration extends Configuration {
 
@@ -15,8 +15,14 @@ public class TodoConfiguration extends Configuration {
     @JsonProperty("database")
     private DataSourceFactory dataSourceFactory;
 
+    @JsonProperty("swagger")
+    private SwaggerBundleConfiguration swaggerBundleConfiguration;
 
     public DataSourceFactory getSourceFactory() {
         return dataSourceFactory;
+    }
+
+    public SwaggerBundleConfiguration getSwaggerConfiguration() {
+        return swaggerBundleConfiguration;
     }
 }

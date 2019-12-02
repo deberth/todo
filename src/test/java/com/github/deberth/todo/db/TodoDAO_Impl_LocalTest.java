@@ -18,7 +18,7 @@ class TodoDAO_Impl_LocalTest {
     private static final Todo TODO_TWO = new Todo("Name2","Description2");
 
     @BeforeEach
-    void resetDAO() {
+    void resetDAO() throws Exception {
         DAO.findAll().parallelStream().forEach(t -> DAO.remove(t.getId()));
         
     }
@@ -44,7 +44,7 @@ class TodoDAO_Impl_LocalTest {
     }
 
     @Test
-    void findAll() {
+    void findAll() throws Exception {
         List<Todo> todos = DAO.findAll();
         assertThat(todos.isEmpty()).isEqualTo(true);
 

@@ -3,14 +3,21 @@ package com.github.deberth.todo;
 import com.github.deberth.todo.api.Task;
 import com.github.deberth.todo.api.Todo;
 import com.github.deberth.todo.core.TodoServiceFactory;
+import com.github.deberth.todo.core.auth.TodoAuthenticator;
+import com.github.deberth.todo.core.auth.User;
 import com.github.deberth.todo.health.DatabaseHealthCheck;
 import com.github.deberth.todo.resources.TodoResource;
 import io.dropwizard.Application;
+import io.dropwizard.auth.AuthDynamicFeature;
+import io.dropwizard.auth.AuthValueFactoryProvider;
+import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
 import io.dropwizard.setup.Bootstrap;
 import io.dropwizard.setup.Environment;
+import io.federecio.dropwizard.swagger.SwaggerBundle;
+import io.federecio.dropwizard.swagger.SwaggerBundleConfiguration;
 import org.dhatim.dropwizard.correlationid.CorrelationIdBundle;
 import org.flywaydb.core.Flyway;
 import org.slf4j.Logger;
@@ -28,6 +35,13 @@ public class TodoApplication extends Application<TodoConfiguration> {
         }
     };
 
+    private final SwaggerBundle swagger = new SwaggerBundle<TodoConfiguration>() {
+        @Override
+        protected SwaggerBundleConfiguration getSwaggerBundleConfiguration(TodoConfiguration todoConfiguration) {
+            return todoConfiguration.getSwaggerConfiguration();
+        }
+    };
+
     public static void main(final String[] args) throws Exception {
         new TodoApplication().run(args);
     }
@@ -41,6 +55,7 @@ public class TodoApplication extends Application<TodoConfiguration> {
     public void initialize(final Bootstrap<TodoConfiguration> bootstrap) {
         bootstrap.addBundle(hibernate);
         bootstrap.addBundle(CorrelationIdBundle.getDefault());
+        bootstrap.addBundle(swagger);
     }
 
     @Override
@@ -63,6 +78,13 @@ public class TodoApplication extends Application<TodoConfiguration> {
                 //new TodoResource(TodoServiceFactory.getTodoService(storageType)));
                 new TodoResource(TodoServiceFactory.getTodoService("database", hibernate.getSessionFactory()))
         );
+
+        environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
+                .setAuthenticator(new TodoAuthenticator())
+                .setRealm("BASIC-AUTH-REALM")
+                .buildAuthFilter()));
+        environment.jersey().register(new AuthValueFactoryProvider.Binder<>(User.class));
+
         Logger.info("Setup Done - Ready for queries");
     }
 

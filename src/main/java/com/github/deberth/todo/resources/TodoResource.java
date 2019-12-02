@@ -3,7 +3,10 @@ package com.github.deberth.todo.resources;
 import com.github.deberth.todo.api.Todo;
 import com.github.deberth.todo.core.TodoService;
 import com.github.deberth.todo.core.TodoServiceResponse;
+import com.github.deberth.todo.core.auth.User;
+import io.dropwizard.auth.Auth;
 import io.dropwizard.hibernate.UnitOfWork;
+import io.swagger.annotations.*;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -17,6 +20,7 @@ import java.util.List;
 @Path(TodoResource.BASE_PATH_TODO)
 @Consumes(MediaType.APPLICATION_JSON)
 @Produces(MediaType.APPLICATION_JSON)
+@Api(value = "/todos")
 public class TodoResource {
 
     public static final String BASE_PATH_TODO = "/todos";
@@ -28,7 +32,14 @@ public class TodoResource {
 
     @GET
     @UnitOfWork
-    public Response findAllTodos() {
+    @ApiOperation(value = "Returns all todos",
+            response = Todo.class,
+            responseContainer = "List")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Request successful", response = Todo.class, responseContainer = "List"),
+            @ApiResponse(code = 401, message = "Unauthorized user"),
+            @ApiResponse(code = 500, message = "Internal error") })
+    public Response findAllTodos(@ApiParam(hidden = true) @Auth User user) {
         TodoServiceResponse serviceResponse = this.todoService.findAllTodos();
 
         if (serviceResponse.getCode() == TodoService.OK) {
@@ -45,7 +56,16 @@ public class TodoResource {
     @GET
     @UnitOfWork
     @Path("/{id}")
-    public Response findTodoById(@PathParam("id") int id) {
+    @ApiOperation(value = "Returns todo for id")
+    @ApiResponses(value = {
+            @ApiResponse(code = 200, message = "Request successful", response = Todo.class),
+            @ApiResponse(code = 401, message = "Unauthorized user"),
+            @ApiResponse(code = 404, message = "Could not find todo"),
+            @ApiResponse(code = 500, message = "Internal error") })
+    public Response findTodoById(
+            @ApiParam(value = "Id of requested todo", required = true)
+            @PathParam("id") int id,
+            @ApiParam(hidden = true) @Auth User user) {
         TodoServiceResponse serviceResponse = this.todoService.findTodoById(id);
 
         switch (serviceResponse.getCode()) {
@@ -65,7 +85,16 @@ public class TodoResource {
 
     @POST
     @UnitOfWork
-    public Response createTodo(@Valid Todo todo) throws URISyntaxException {
+    @ApiOperation(value = "Creates new todo")
+    @ApiResponses(value = {
+            @ApiResponse(code = 201, message = "Todo has been created", response = Todo.class),
+            @ApiResponse(code = 401, message = "Unauthorized user"),
+            @ApiResponse(code = 409, message = "Todo already exists"),
+            @ApiResponse(code = 500, message = "Internal error") })
+    public Response createTodo(
+            @ApiParam(value = "Todo to be persisted", required = true)
+            @NotNull(message = "JSON body for creation must not be empty") @Valid Todo todo,
+            @ApiParam(hidden = true) @Auth User user) throws URISyntaxException {
 
         TodoServiceResponse serviceResponse = this.todoService.createNewTodo(todo);
 
@@ -87,7 +116,16 @@ public class TodoResource {
     @DELETE
     @UnitOfWork
     @Path("/{id}")
-    public Response removeTodo(@PathParam("id") int id) {
+    @ApiOperation(value = "Removes todo by given id")
+    @ApiResponses(value = {
+            @ApiResponse(code = 204, message = "Todo has been deleted"),
+            @ApiResponse(code = 401, message = "Unauthorized user"),
+            @ApiResponse(code = 404, message = "Could not find todo"),
+            @ApiResponse(code = 500, message = "Internal error") })
+    public Response removeTodo(
+            @ApiParam(value = "Id of todo which shall be removed", required = true)
+            @PathParam("id") int id,
+            @ApiParam(hidden = true) @Auth User user) {
 
         TodoServiceResponse serviceResponse = this.todoService.removeTodo(id);;
 
@@ -104,7 +142,19 @@ public class TodoResource {
     @PUT
     @UnitOfWork
     @Path("/{id}")
-    public Response updateTodo(@PathParam("id") int id, @Valid @NotNull Todo updatedTodo) throws URISyntaxException {
+    @ApiOperation(value = "Removes todo by given id")
+    @ApiResponses(value = {
+            @ApiResponse(code = 204, message = "Todo has been updated"),
+            @ApiResponse(code = 201, message = "Todo has been created"),
+            @ApiResponse(code = 401, message = "Unauthorized user"),
+            @ApiResponse(code = 400, message = "Id in path is different than id in todo body"),
+            @ApiResponse(code = 500, message = "Internal error") })
+    public Response updateTodo(
+            @ApiParam(value = "Id of todo which shall be updated", required = true)
+            @PathParam("id") int id,
+            @ApiParam(value = "Updated todo body", required = true)
+            @Valid Todo updatedTodo,
+            @Auth User user) throws URISyntaxException {
 
         TodoServiceResponse serviceResponse = this.todoService.updateTodo(id, updatedTodo);;
 

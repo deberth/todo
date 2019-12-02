@@ -30,7 +30,7 @@ class TodoServiceDatabaseTest {
 	}
 
 	@Test
-	void findAllTodos() {
+	void findAllTodos() throws Exception {
 
 		// given
 		Todo expected = new Todo(1, "name","description");

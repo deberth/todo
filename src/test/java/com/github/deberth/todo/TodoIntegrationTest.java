@@ -7,6 +7,7 @@ import io.dropwizard.testing.ResourceHelpers;
 import io.dropwizard.testing.junit5.DropwizardAppExtension;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import org.eclipse.jetty.http.HttpStatus;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -17,6 +18,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.GenericType;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -49,23 +51,12 @@ class TodoIntegrationTest {
                     TodoApplication.class,
                     CONFIG_PATH,
                     ConfigOverride.config("database.url", postgres.getJdbcUrl()
+                    ),
+                    ConfigOverride.config("database.driverClass", "org.postgresql.Driver"
                     ));
-
-//    @BeforeAll
-//    public static void migrateDb() throws Exception {
-//        APP.getApplication().run("db", "migrate", CONFIG_PATH);
-//
-//    }
 
     @Test
     void happyFlow() {
-        System.out.println("##############################################");
-        System.out.println("##############################################");
-        System.out.println("##############################################");
-        System.out.println(CONFIG_PATH);
-        System.out.println("##############################################");
-        System.out.println("##############################################");
-        System.out.println("##############################################");
         CreateTodos();
         CheckTodosForSize(2);
         UpdateTodo();
@@ -146,9 +137,11 @@ class TodoIntegrationTest {
     }
 
     private Response executeRequest(String path, String method, Entity entity) {
-
+        HttpAuthenticationFeature authFeature = HttpAuthenticationFeature.basic("integrationtest", "todosecret");
         Invocation.Builder builder = APP.client().target(HTTP_LOCALHOST + APP.getLocalPort() + path)
+                .register(authFeature)
                 .request(MediaType.APPLICATION_JSON_TYPE);
+
         switch (method) {
             case HttpMethod.GET:
                 return builder.get();

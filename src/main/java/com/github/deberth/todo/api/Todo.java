@@ -27,7 +27,7 @@ public class Todo {
     private String name;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String description;
+    private String description = "";
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)

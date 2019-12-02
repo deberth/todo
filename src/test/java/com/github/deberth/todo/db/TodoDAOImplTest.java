@@ -33,7 +33,7 @@ class TodoDAOImplTest {
 	}
 
 	@Test
-	void findAll() {
+	void findAll() throws Exception {
 
 		Query query = mock(Query.class);
 		Todo expected = new Todo("name","description");

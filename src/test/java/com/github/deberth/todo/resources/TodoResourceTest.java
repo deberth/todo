@@ -4,8 +4,15 @@ import com.github.deberth.todo.api.Todo;
 import com.github.deberth.todo.core.TodoService;
 import com.github.deberth.todo.core.TodoServiceDatabase;
 import com.github.deberth.todo.core.TodoServiceResponse;
+import com.github.deberth.todo.core.auth.TodoAuthenticator;
+import com.github.deberth.todo.core.auth.User;
+import io.dropwizard.auth.AuthDynamicFeature;
+import io.dropwizard.auth.AuthValueFactoryProvider;
+import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
 import io.dropwizard.testing.junit5.DropwizardExtensionsSupport;
 import io.dropwizard.testing.junit5.ResourceExtension;
+import org.glassfish.jersey.client.authentication.HttpAuthenticationFeature;
+import org.glassfish.jersey.media.multipart.MultiPartFeature;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -23,15 +30,24 @@ import static org.mockito.Mockito.*;
 @ExtendWith(DropwizardExtensionsSupport.class)
 class TodoResourceTest {
 
-	private static final TodoService service = mock(TodoServiceDatabase.class);
-
-	private static final ResourceExtension resources = ResourceExtension.builder()
-			.addResource(new TodoResource(service))
+	private static final TodoService SERVICE_DATABASE = mock(TodoServiceDatabase.class);
+	private static final BasicCredentialAuthFilter<User> BASIC_AUTH_HANDLER =
+			new BasicCredentialAuthFilter.Builder<User>()
+					.setAuthenticator(new TodoAuthenticator())
+					.setPrefix("Basic")
+					.setRealm("Basic Auth")
+					.buildAuthFilter();
+	private static final HttpAuthenticationFeature AUTHENTICATION_FEATURE = HttpAuthenticationFeature.basic("integrationtest", "todosecret");
+	private static final ResourceExtension RESOURCES = ResourceExtension.builder()
+			.addResource(new TodoResource(SERVICE_DATABASE))
+			.addProvider(new AuthDynamicFeature(BASIC_AUTH_HANDLER))
+			.addProvider(new AuthValueFactoryProvider.Binder<>(User.class))
 			.build();
+
 
 	@BeforeEach
 	void setUp() {
-		reset(service);
+		reset(SERVICE_DATABASE);
 
 	}
 
@@ -47,17 +63,24 @@ class TodoResourceTest {
 		TodoServiceResponse expectedServiceResponse = new TodoServiceResponse(TodoService.OK, todos);
 
 		// and
-		doReturn(expectedServiceResponse).when(service).findAllTodos();
+		doReturn(expectedServiceResponse).when(SERVICE_DATABASE).findAllTodos();
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO).request().get();
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO)
+				.register(new AuthDynamicFeature(
+					new BasicCredentialAuthFilter.Builder<User>()
+						.setAuthenticator(new TodoAuthenticator())
+						.setRealm("BASIC-AUTH-REALM")
+						.buildAuthFilter()))
+				.register(new AuthValueFactoryProvider.Binder<>(User.class))
+				.register(AUTHENTICATION_FEATURE).request().get();
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
 		List<Todo> foundTodos = response.readEntity(new GenericType<List<Todo>>(){});
 		List<Todo> expectedTodos = (List<Todo>) expectedServiceResponse.getEntity();
 		assertThat(foundTodos.containsAll(expectedTodos)).isTrue();
-		verify(service).findAllTodos();
+		verify(SERVICE_DATABASE).findAllTodos();
 	}
 
 	@Test
@@ -67,14 +90,14 @@ class TodoResourceTest {
 		TodoServiceResponse expectedServiceResponse = new TodoServiceResponse(999, null);
 
 		// and
-		doReturn(expectedServiceResponse).when(service).findAllTodos();
+		doReturn(expectedServiceResponse).when(SERVICE_DATABASE).findAllTodos();
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO).request().get();
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO).register(AUTHENTICATION_FEATURE).request().get();
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-		verify(service).findAllTodos();
+		verify(SERVICE_DATABASE).findAllTodos();
 
 	}
 
@@ -85,14 +108,14 @@ class TodoResourceTest {
 		TodoServiceResponse expectedServiceResponse = new TodoServiceResponse(TodoService.OK, null);
 
 		// and
-		doReturn(expectedServiceResponse).when(service).findAllTodos();
+		doReturn(expectedServiceResponse).when(SERVICE_DATABASE).findAllTodos();
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO).request().get();
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO).register(AUTHENTICATION_FEATURE).request().get();
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
-		verify(service).findAllTodos();
+		verify(SERVICE_DATABASE).findAllTodos();
 
 	}
 
@@ -105,15 +128,15 @@ class TodoResourceTest {
 		TodoServiceResponse expectedServiceResponse = new TodoServiceResponse(TodoService.OK, expectedTodo);
 
 		// and
-		doReturn(expectedServiceResponse).when(service).findTodoById(expectedTodoId);
+		doReturn(expectedServiceResponse).when(SERVICE_DATABASE).findTodoById(expectedTodoId);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).request().get();
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).register(AUTHENTICATION_FEATURE).request().get();
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.OK.getStatusCode());
 		assertThat(response.readEntity(Todo.class).equals(expectedTodo)).isTrue();
-		verify(service).findTodoById(expectedTodoId);
+		verify(SERVICE_DATABASE).findTodoById(expectedTodoId);
 	}
 
 	@Test
@@ -124,14 +147,14 @@ class TodoResourceTest {
 		TodoServiceResponse expectedServiceResponse = new TodoServiceResponse(999, null);
 
 		// and
-		doReturn(expectedServiceResponse).when(service).findTodoById(expectedTodoId);
+		doReturn(expectedServiceResponse).when(SERVICE_DATABASE).findTodoById(expectedTodoId);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).request().get();
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).register(AUTHENTICATION_FEATURE).request().get();
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-		verify(service).findTodoById(expectedTodoId);
+		verify(SERVICE_DATABASE).findTodoById(expectedTodoId);
 	}
 
 	@Test
@@ -142,14 +165,14 @@ class TodoResourceTest {
 		TodoServiceResponse expectedServiceResponse = new TodoServiceResponse(TodoService.OK, null);
 
 		// and
-		doReturn(expectedServiceResponse).when(service).findTodoById(expectedTodoId);
+		doReturn(expectedServiceResponse).when(SERVICE_DATABASE).findTodoById(expectedTodoId);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).request().get();
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).register(AUTHENTICATION_FEATURE).request().get();
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-		verify(service).findTodoById(expectedTodoId);
+		verify(SERVICE_DATABASE).findTodoById(expectedTodoId);
 	}
 
 	@Test
@@ -160,14 +183,14 @@ class TodoResourceTest {
 		TodoServiceResponse expectedServiceResponse = new TodoServiceResponse(TodoService.NOT_FOUND, null);
 
 		// and
-		doReturn(expectedServiceResponse).when(service).findTodoById(expectedTodoId);
+		doReturn(expectedServiceResponse).when(SERVICE_DATABASE).findTodoById(expectedTodoId);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).request().get();
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).register(AUTHENTICATION_FEATURE).request().get();
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
-		verify(service).findTodoById(expectedTodoId);
+		verify(SERVICE_DATABASE).findTodoById(expectedTodoId);
 	}
 
 	@Test
@@ -182,15 +205,15 @@ class TodoResourceTest {
 			((Todo)t.getArgument(0)).setId(expectedTodoId);
 
 			return new TodoServiceResponse(TodoService.CREATED, t.getArgument(0));
-		}).when(service).createNewTodo(expectedTodo);
+		}).when(SERVICE_DATABASE).createNewTodo(expectedTodo);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO).request(MediaType.APPLICATION_JSON).post(Entity.json(expectedTodo));
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO).register(AUTHENTICATION_FEATURE).request(MediaType.APPLICATION_JSON).post(Entity.json(expectedTodo));
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
 		assertThat(response.readEntity(Todo.class).getId()).isEqualTo(expectedTodoId);
-		verify(service).createNewTodo(Mockito.any());
+		verify(SERVICE_DATABASE).createNewTodo(Mockito.any());
 	}
 
 	@Test
@@ -201,14 +224,14 @@ class TodoResourceTest {
 		Todo expectedTodo = new Todo("test","");
 
 		// and
-		doReturn(new TodoServiceResponse(TodoService.CONFLICT, null)).when(service).createNewTodo(expectedTodo);
+		doReturn(new TodoServiceResponse(TodoService.CONFLICT, null)).when(SERVICE_DATABASE).createNewTodo(expectedTodo);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO).request(MediaType.APPLICATION_JSON).post(Entity.json(expectedTodo));
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO).register(AUTHENTICATION_FEATURE).request(MediaType.APPLICATION_JSON).post(Entity.json(expectedTodo));
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.CONFLICT.getStatusCode());
-		verify(service).createNewTodo(expectedTodo);
+		verify(SERVICE_DATABASE).createNewTodo(expectedTodo);
 	}
 
 	@Test
@@ -219,14 +242,14 @@ class TodoResourceTest {
 		Todo expectedTodo = new Todo("test","");
 
 		// and
-		doReturn(new TodoServiceResponse(TodoService.CREATED, null)).when(service).createNewTodo(expectedTodo);
+		doReturn(new TodoServiceResponse(TodoService.CREATED, null)).when(SERVICE_DATABASE).createNewTodo(expectedTodo);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO).request(MediaType.APPLICATION_JSON).post(Entity.json(expectedTodo));
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO).register(AUTHENTICATION_FEATURE).request(MediaType.APPLICATION_JSON).post(Entity.json(expectedTodo));
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-		verify(service).createNewTodo(expectedTodo);
+		verify(SERVICE_DATABASE).createNewTodo(expectedTodo);
 	}
 
 	@Test
@@ -236,14 +259,14 @@ class TodoResourceTest {
 		Todo expectedTodo = new Todo("test","");
 
 		// and
-		doReturn(new TodoServiceResponse(999, null)).when(service).createNewTodo(expectedTodo);
+		doReturn(new TodoServiceResponse(999, null)).when(SERVICE_DATABASE).createNewTodo(expectedTodo);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO).request(MediaType.APPLICATION_JSON).post(Entity.json(expectedTodo));
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO).register(AUTHENTICATION_FEATURE).request(MediaType.APPLICATION_JSON).post(Entity.json(expectedTodo));
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-		verify(service).createNewTodo(expectedTodo);
+		verify(SERVICE_DATABASE).createNewTodo(expectedTodo);
 	}
 
 	@Test
@@ -253,14 +276,14 @@ class TodoResourceTest {
 		int expectedTodoId = 411;
 
 		// and
-		doReturn(new TodoServiceResponse(TodoService.NO_CONTENT, null)).when(service).removeTodo(expectedTodoId);
+		doReturn(new TodoServiceResponse(TodoService.NO_CONTENT, null)).when(SERVICE_DATABASE).removeTodo(expectedTodoId);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).request().delete();
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).register(AUTHENTICATION_FEATURE).request().delete();
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
-		verify(service).removeTodo(expectedTodoId);
+		verify(SERVICE_DATABASE).removeTodo(expectedTodoId);
 	}
 
 
@@ -272,14 +295,14 @@ class TodoResourceTest {
 		int expectedTodoId = 412;
 
 		// and
-		doReturn(new TodoServiceResponse(TodoService.NOT_FOUND, null)).when(service).removeTodo(expectedTodoId);
+		doReturn(new TodoServiceResponse(TodoService.NOT_FOUND, null)).when(SERVICE_DATABASE).removeTodo(expectedTodoId);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).request().delete();
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).register(AUTHENTICATION_FEATURE).request().delete();
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.NOT_FOUND.getStatusCode());
-		verify(service).removeTodo(expectedTodoId);
+		verify(SERVICE_DATABASE).removeTodo(expectedTodoId);
 	}
 
 	@Test
@@ -289,14 +312,14 @@ class TodoResourceTest {
 		int expectedTodoId = 413;
 
 		// and
-		doReturn(new TodoServiceResponse(999, null)).when(service).removeTodo(expectedTodoId);
+		doReturn(new TodoServiceResponse(999, null)).when(SERVICE_DATABASE).removeTodo(expectedTodoId);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).request().delete();
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).register(AUTHENTICATION_FEATURE).request().delete();
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-		verify(service).removeTodo(expectedTodoId);
+		verify(SERVICE_DATABASE).removeTodo(expectedTodoId);
 	}
 
 	@Test
@@ -307,14 +330,14 @@ class TodoResourceTest {
 		Todo expectedTodo = new Todo("test","");
 
 		// and
-		doReturn(new TodoServiceResponse(TodoService.NO_CONTENT)).when(service).updateTodo(expectedTodoId, expectedTodo);
+		doReturn(new TodoServiceResponse(TodoService.NO_CONTENT)).when(SERVICE_DATABASE).updateTodo(expectedTodoId, expectedTodo);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).request(MediaType.APPLICATION_JSON).put(Entity.json(expectedTodo));
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).register(AUTHENTICATION_FEATURE).request(MediaType.APPLICATION_JSON).put(Entity.json(expectedTodo));
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.NO_CONTENT.getStatusCode());
-		verify(service).updateTodo(expectedTodoId, expectedTodo);
+		verify(SERVICE_DATABASE).updateTodo(expectedTodoId, expectedTodo);
 	}
 
 	@Test
@@ -325,15 +348,15 @@ class TodoResourceTest {
 		Todo expectedTodo = new Todo("test","");
 
 		// and
-		doReturn(new TodoServiceResponse(TodoService.CREATED, expectedTodo)).when(service).updateTodo(expectedTodoId, expectedTodo);
+		doReturn(new TodoServiceResponse(TodoService.CREATED, expectedTodo)).when(SERVICE_DATABASE).updateTodo(expectedTodoId, expectedTodo);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).request(MediaType.APPLICATION_JSON).put(Entity.json(expectedTodo));
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).register(AUTHENTICATION_FEATURE).request(MediaType.APPLICATION_JSON).put(Entity.json(expectedTodo));
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.CREATED.getStatusCode());
 		assertThat(response.readEntity(Todo.class)).isNotNull();
-		verify(service).updateTodo(expectedTodoId, expectedTodo);
+		verify(SERVICE_DATABASE).updateTodo(expectedTodoId, expectedTodo);
 	}
 
 	@Test
@@ -344,15 +367,15 @@ class TodoResourceTest {
 		Todo expectedTodo = new Todo("test","");
 
 		// and
-		doReturn(new TodoServiceResponse(TodoService.CREATED, null)).when(service).updateTodo(expectedTodoId, expectedTodo);
+		doReturn(new TodoServiceResponse(TodoService.CREATED, null)).when(SERVICE_DATABASE).updateTodo(expectedTodoId, expectedTodo);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).request(MediaType.APPLICATION_JSON).put(Entity.json(expectedTodo));
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).register(AUTHENTICATION_FEATURE).request(MediaType.APPLICATION_JSON).put(Entity.json(expectedTodo));
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
 		assertThat(response.readEntity(Todo.class)).isNull();
-		verify(service).updateTodo(expectedTodoId, expectedTodo);
+		verify(SERVICE_DATABASE).updateTodo(expectedTodoId, expectedTodo);
 	}
 
 	@Test
@@ -363,14 +386,14 @@ class TodoResourceTest {
 		Todo expectedTodo = new Todo(expectedTodoId,"test","");
 
 		// and
-		doReturn(new TodoServiceResponse(TodoService.BAD_REQUEST, null)).when(service).updateTodo(expectedTodoId, expectedTodo);
+		doReturn(new TodoServiceResponse(TodoService.BAD_REQUEST, null)).when(SERVICE_DATABASE).updateTodo(expectedTodoId, expectedTodo);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).request(MediaType.APPLICATION_JSON).put(Entity.json(expectedTodo));
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).register(AUTHENTICATION_FEATURE).request(MediaType.APPLICATION_JSON).put(Entity.json(expectedTodo));
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.BAD_REQUEST.getStatusCode());
-		verify(service).updateTodo(expectedTodoId, expectedTodo);
+		verify(SERVICE_DATABASE).updateTodo(expectedTodoId, expectedTodo);
 	}
 
 	@Test
@@ -381,14 +404,14 @@ class TodoResourceTest {
 		Todo expectedTodo = new Todo(expectedTodoId,"test","");
 
 		// and
-		doReturn(new TodoServiceResponse(999, null)).when(service).updateTodo(expectedTodoId, expectedTodo);
+		doReturn(new TodoServiceResponse(999, null)).when(SERVICE_DATABASE).updateTodo(expectedTodoId, expectedTodo);
 
 		// when
-		Response response = resources.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).request(MediaType.APPLICATION_JSON).put(Entity.json(expectedTodo));
+		Response response = RESOURCES.target(TodoResource.BASE_PATH_TODO + "/" + expectedTodoId).register(AUTHENTICATION_FEATURE).request(MediaType.APPLICATION_JSON).put(Entity.json(expectedTodo));
 
 		// then
 		assertThat(response.getStatus()).isEqualTo(Response.Status.INTERNAL_SERVER_ERROR.getStatusCode());
-		verify(service).updateTodo(expectedTodoId, expectedTodo);
+		verify(SERVICE_DATABASE).updateTodo(expectedTodoId, expectedTodo);
 	}
 
 }

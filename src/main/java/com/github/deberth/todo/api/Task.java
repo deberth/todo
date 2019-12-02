@@ -24,7 +24,7 @@ public class Task {
     private String name;
 
     @JsonInclude(JsonInclude.Include.NON_NULL)
-    private String description;
+    private String description = "";
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "todo_id", insertable = false, updatable = false)

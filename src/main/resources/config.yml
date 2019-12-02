@@ -34,3 +34,6 @@ database:
     #hibernate.hbm2ddl.auto: update
   maxWaitForConnection: 5s
   validationQuery: "SELECT 1"
+
+swagger:
+  resourcePackage: "com.github.deberth.todo.resources"
