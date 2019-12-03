@@ -80,7 +80,7 @@ public class TodoServiceLocal extends TodoService{
                 this.taskDAO.create(t);
             });
             Logger.debug("Attempting update in local map");
-            this.todoDAO.update(todo.getId(), todo);
+            this.todoDAO.update(id, todo);
             Logger.info("Todo with id {} updated", id);
 
             return new TodoServiceResponse(NO_CONTENT, null);

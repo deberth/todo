@@ -37,3 +37,5 @@ database:
 
 swagger:
   resourcePackage: "com.github.deberth.todo.resources"
+
+storage: ${TODO_STORAGE_TYPE:-database}

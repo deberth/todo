@@ -18,11 +18,20 @@ public class TodoConfiguration extends Configuration {
     @JsonProperty("swagger")
     private SwaggerBundleConfiguration swaggerBundleConfiguration;
 
+    @Valid
+    @NotNull
+    @JsonProperty("storage")
+    private String storage;
+
     public DataSourceFactory getSourceFactory() {
         return dataSourceFactory;
     }
 
     public SwaggerBundleConfiguration getSwaggerConfiguration() {
         return swaggerBundleConfiguration;
+    }
+
+    public String getStorage() {
+        return storage;
     }
 }

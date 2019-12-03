@@ -12,6 +12,8 @@ import io.dropwizard.auth.AuthDynamicFeature;
 import io.dropwizard.auth.AuthValueFactoryProvider;
 import io.dropwizard.auth.basic.BasicCredentialAuthFilter;
 import io.dropwizard.client.JerseyClientBuilder;
+import io.dropwizard.configuration.EnvironmentVariableSubstitutor;
+import io.dropwizard.configuration.SubstitutingSourceProvider;
 import io.dropwizard.db.DataSourceFactory;
 import io.dropwizard.db.PooledDataSourceFactory;
 import io.dropwizard.hibernate.HibernateBundle;
@@ -59,13 +61,22 @@ public class TodoApplication extends Application<TodoConfiguration> {
         bootstrap.addBundle(hibernate);
         bootstrap.addBundle(CorrelationIdBundle.getDefault());
         bootstrap.addBundle(swagger);
+        bootstrap.setConfigurationSourceProvider(
+                new SubstitutingSourceProvider(bootstrap.getConfigurationSourceProvider(),
+                        new EnvironmentVariableSubstitutor(false)
+                )
+        );
     }
 
     @Override
     public void run(final TodoConfiguration configuration,
                     final Environment environment) {
         Logger.info("Starting application");
-        String storageType = "local";
+        String storageType = configuration.getStorage();
+        Logger.info("Storage type: {}", storageType);
+        environment.jersey().register(
+                new TodoResource(TodoServiceFactory.getTodoService(storageType, hibernate.getSessionFactory()))
+        );
 
         Logger.info("Flyway migration - Start");
         // Database migration
@@ -75,14 +86,9 @@ public class TodoApplication extends Application<TodoConfiguration> {
         flyway.migrate();
         Logger.info("Flyway migration - Done");
 
-        Logger.info("Storage type: {}", storageType);
         //Application health check
         final Client client = new JerseyClientBuilder(environment).build("healthClient");
         environment.healthChecks().register("appHealth", new AppCheck(client));
-        environment.jersey().register(
-                //new TodoResource(TodoServiceFactory.getTodoService(storageType)));
-                new TodoResource(TodoServiceFactory.getTodoService("database", hibernate.getSessionFactory()))
-        );
 
         // Auth feature
         environment.jersey().register(new AuthDynamicFeature(new BasicCredentialAuthFilter.Builder<User>()
